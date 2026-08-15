@@ -10,16 +10,21 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/og": "^1.0.1",
+    "drizzle-orm": "^0.45.2",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "next": "^15.1.0",
+    "pg": "^8.23.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^22.14.0",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.1.14",

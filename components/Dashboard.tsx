@@ -50,8 +50,11 @@ import {
   Copy,
   Eye,
   Monitor,
-  Smartphone
+  Smartphone,
+  Terminal
 } from 'lucide-react';
+import { syncMembers } from '@/app/actions/members';
+import CommandsSection from '@/components/commands-section';
 
 const getRealOrigin = () => {
   let origin = window.location.origin;
@@ -554,7 +557,7 @@ asta
 ➳ Resistencia = 0
 ➳ Ki = 0
 ➳ Tipo De Ip = Humano
-➳ Nivel = 0
+�� Nivel = 0
 ➳ Parte do Ip = Comum
 ➳ Funções = 0
 ➳ Sistema = Tudo Normal.
@@ -1266,7 +1269,7 @@ export function CardSkinEffects({ skinId }: { skinId?: string }) {
       {skinId === 'imperial-dragon' && (
         <>
           <div className="absolute inset-0 border border-yellow-500/20 rounded-[24px] pointer-events-none" />
-          <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 text-2xl filter drop-shadow-[0_0_8px_gold] animate-float-slow">🐲</div>
+          <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 text-2xl filter drop-shadow-[0_0_8px_gold] animate-float-slow">����</div>
           <div className="absolute right-[-35px] bottom-[15%] text-yellow-500 opacity-30 text-2xl animate-pulse">🐉</div>
         </>
       )}
@@ -2157,6 +2160,7 @@ export default function Dashboard() {
 
   const [showGlobalExportModal, setShowGlobalExportModal] = useState(false);
   const [selectedExportMemberName, setSelectedExportMemberName] = useState<string>('');
+  const [showCommandsSection, setShowCommandsSection] = useState(false);
 
   const [logs, setLogs] = useState<{ id: string; time: string; user: string; text: string; type: 'info' | 'error' | 'success' }[]>([]);
   const [webhookUrl, setWebhookUrl] = useState(() => {
@@ -2174,6 +2178,24 @@ export default function Dashboard() {
     if (!localStorage.getItem('studio_migration_v2')) {
       localStorage.setItem('studio_migration_v2', 'true');
     }
+  }, [members]);
+
+  // Espelha os membros no banco (Neon) de forma "debounced", para que os
+  // comandos do Discord sempre gerem a imagem com os dados mais recentes.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      syncMembers(
+        members.map((m) => ({
+          name: m.name,
+          data: m,
+          backgroundImageUrl: m.customBgUrl || m.customEmbedBanner || null,
+          accentColor: m.customEmbedColor || m.customGlowColor || null,
+        })),
+      ).catch((err) => {
+        console.log('[v0] Falha ao sincronizar membros com o banco:', err);
+      });
+    }, 1500);
+    return () => clearTimeout(timeout);
   }, [members]);
 
   const addLog = (user: string, text: string, type: 'info' | 'error' | 'success' = 'info') => {
@@ -2570,6 +2592,15 @@ export default function Dashboard() {
             <Camera size={14} className="text-cyan-400" />
             <span>📸 Pré-Imagem / Exportar</span>
           </button>
+
+          <button
+            onClick={() => setShowCommandsSection(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-extrabold uppercase transition-all flex items-center gap-1.5 cursor-pointer bg-slate-950 text-emerald-300 hover:text-white hover:bg-emerald-950/60 border border-emerald-500/30 hover:border-emerald-400 shadow-sm active:scale-95"
+            title="Criar e gerenciar slash commands do Discord"
+          >
+            <Terminal size={14} className="text-emerald-400" />
+            <span>⌘ Comandos</span>
+          </button>
         </div>
 
         <div className="text-[10px] font-mono text-slate-500 hidden lg:block">
@@ -2933,16 +2964,21 @@ export default function Dashboard() {
         )}
       </div>
 
-      <GlobalExportModal
-        isOpen={showGlobalExportModal}
-        onClose={() => setShowGlobalExportModal(false)}
-        members={members}
-        selectedMemberName={selectedExportMemberName || (members[0]?.name || '')}
-        onSelectMember={(name) => setSelectedExportMemberName(name)}
-        statsWebhookUrl={statsWebhookUrl}
-        webhookUrl={webhookUrl}
-      />
-    </div>
+ <GlobalExportModal
+  isOpen={showGlobalExportModal}
+  onClose={() => setShowGlobalExportModal(false)}
+  members={members}
+  selectedMemberName={selectedExportMemberName || (members[0]?.name || '')}
+  onSelectMember={(name) => setSelectedExportMemberName(name)}
+  statsWebhookUrl={statsWebhookUrl}
+  webhookUrl={webhookUrl}
+  />
+  <CommandsSection
+  isOpen={showCommandsSection}
+  onClose={() => setShowCommandsSection(false)}
+  members={members}
+  />
+  </div>
   );
 }
 
